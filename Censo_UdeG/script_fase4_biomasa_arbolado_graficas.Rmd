@@ -1,0 +1,158 @@
+Arboles en los Centros Universitarios
+========================================================
+
+---
+title: "Script para calcular biomasa del arbolado en CU (fase 4)"
+author: "Viacheslav Shalisko"
+date: "25 de octubre de 2016"
+output: html_document
+---
+
+### Nota: fase 4 del censo (CUNORTE y CUVALLES)
+
+### Formato de tabla de entrada (.csv):
+1. *Centro* - código del CU  
+2. *Especie* - nombre científico  
+3. *Codigo* - identificador único del arbol  
+4. *AB* - área basal del árbol (dm^2^)  
+5. *DTr* - diametro del tronco equivalente (cm)  
+6. *Alt* - estatura del árbol (m)  
+Columnas posteriores a la sexta no se incluyen en el análisis y pueden contener cualquier información
+
+### Definición de variables
+
+```{r}
+# Tabla de datos fuente en el formato .csv
+tabla_fuente <- "Censo_4.csv"
+
+tabla_especies <- "Censo_4_formulas.csv"
+
+# nombre de una subcarpeta donde se van a guardar las tablas con resultados (carpeta debe existir)
+output_path <- 'resultados_fase4'
+# prefijo de nombres de archivo de tablas con resultados
+output_basename <- 'tabla_fase_4_biomasa'
+```
+
+### Definición de funciones genéricas
+
+```{r}
+simpleCap <- function (x) {
+  paste(toupper(substr(x, 1, 1)), tolower(substr(x, 2, nchar(x))), sep="")
+}
+trim <- function (x) gsub("^\\s+|\\s+$", "", x)
+```
+
+## Cargar los datos
+
+```{r}
+arboles <- read.csv(tabla_fuente)
+formulasB <- read.csv(tabla_especies)
+
+arboles[,"Centro"] <- as.factor(arboles[,"Centro"])
+arboles[,2] <- sapply(as.character(arboles[,2]), simpleCap) # Primera letra mayuscula otras minusculas
+arboles[,2] <- as.factor(trim(arboles[,2]))
+
+list_centers <- unique(arboles[,"Centro"], incomparables = FALSE)
+list_species <- unique(arboles[,2], incomparables = FALSE)
+```
+
+## Resumen de los datos
+#### Nota: Las ecuaciones alométricas se cargan del archivo definido en variable `tabla_especies` y se almacenan en el vector `formulasB`
+
+```{r}
+dim(arboles)
+arboles_my <- arboles[,c(1:3,4:6)]
+names(arboles_my) <- c("Centro","Especie","Clave_arbol","AB","DAP","H")
+summary(arboles_my)
+sort(list_centers)
+list_species <- sort(list_species)
+list_species
+summary(formulasB)
+```
+
+## Calcular biomasa de arboles 
+
+
+```{r}
+tabla_biomasas <- data.frame(
+                 Centro=factor(),Especie=factor(),Clave_arbol=character(), 
+                 AB=numeric(),DAP=numeric(),H=numeric(),
+                 biomasa=numeric(),C=numeric(),CO2=numeric()) 
+
+for (i in 1:length(list_species)) {
+  registros <- arboles_my[arboles_my$Especie == list_species[i],]
+  formulaB <- formulasB[as.character(formulasB$Especie) == as.character(list_species[i]),]
+  
+  DAP <- registros$DAP
+  H <- registros$H
+  cat("\n\n")
+  print(as.character(list_species[i]))
+  formulaBeval <- parse(text=as.character(formulaB$Formula))
+  cat(paste("Formula: ",formulaBeval,"\n"))
+  
+  # biomasa en kg
+  biomasa <- eval(formulaBeval)
+  # carbono en kg
+  C <- 0.5 * biomasa
+  # CO2 en kg
+  CO2 <- 3.67 * C
+
+  registros <- cbind(registros,biomasa,C,CO2)
+  print(registros[,c(1:2,4:7,9)])
+  tabla_biomasas <- rbind(tabla_biomasas,registros)
+}
+```
+
+## Guardar tabla con biomasas calculadas
+
+```{r}
+tabla_biomass_filename <- paste(output_path,paste(output_basename,"resultados.csv",sep=""),sep="/")
+write.table(tabla_biomasas, file = tabla_biomass_filename, sep = ",", row.names = FALSE)
+```
+
+## Representar grgáficamente los modelos allometricos
+
+```{r fig.width = 8, fig.height = 6}
+library(RColorBrewer)
+Hcolors <- brewer.pal(9, "OrRd")
+Hcolors <- Hcolors[3:9]
+
+for (i in 1:length(list_species)) {
+  registros <- arboles_my[arboles_my$Especie == list_species[i],]
+  formulaB <- formulasB[as.character(formulasB$Especie) == as.character(list_species[i]),]
+
+  maxDAP <- max(registros$DAP)
+  if (maxDAP < 20) { maxDAP <- 20 }
+  seqH <- c(rev(seq(from = 5, to = 30, by = 5)),2.5)
+  seqDAP <- seq(from = 5, to = 1.2 * maxDAP, by = 0.5)
+  
+  cat("\n")  
+  print(as.character(list_species[i]))  
+  formulaBeval <- parse(text=as.character(formulaB$Formula))
+  cat(paste("Formula: ",formulaBeval,"\n"))
+
+  DAP <- seqDAP     
+  H <- rep(seqH[1], times = length(seqDAP))
+  seqBbase <- eval(formulaBeval)
+  plot(seqDAP, log(seqBbase), type = "l",
+       ylim = c(0, log(max(seqBbase))),
+       main = paste("Modelo para ",as.character(list_species[i])),
+       xlab = "DAP, cm", ylab = "Ln de biomasa, ln(kg)")
+    
+  for(iH in 1:length(seqH)) {
+    H <- rep(seqH[iH], times = length(seqDAP)) 
+    seqB <- eval(formulaBeval)
+    lines(seqDAP, log(seqB), col = Hcolors[7 - iH])
+  }   
+  
+  legend("topleft", legend=paste("H =",seqH), bty="n", cex=.7, fill=rev(Hcolors))  
+    
+} 
+```
+
+#### Notas 
+Formulas genéricas:
+1. Especies tropicales	p = 0.65 -	*Scatena* et al. (1989)  
+2. Palmeras	p = 0.52 -	*Saldarriga* et al. (1988)  
+3. Coniferas	p = 0.54	*Palma* et al. 2001  
+
