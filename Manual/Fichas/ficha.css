@@ -1,0 +1,170 @@
+    @page {
+      size: 8.5in 11in;
+      margin: 1cm;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+      }
+      .ficha {
+        page-break-after: always;
+      }
+      .imagen, .imagenes, .encabezado, .datos-superiores {
+        page-break-inside: avoid;
+      }
+    }
+
+    body {
+      font-family: Helvetica, sans-serif;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    .ficha {
+      width: 100%;
+      height: 100%;
+      padding: 1cm;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .ficha {
+      width: 100%;
+      height: 100%;
+      padding: 1cm;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .etiqueta-superior {
+      position: absolute;
+      top: 0.2cm;
+      padding: 0.2em 0.6em;
+      font-size: 10pt;
+      font-weight: bold;
+      color: white;
+      border-radius: 0px;
+    }
+
+    .etiqueta-izquierda {
+      left: 1cm;
+      background-color: #2E8B57;
+    }
+
+    .etiqueta-derecha {
+      right: 1cm;
+      background-color: #4682B4;
+    }
+
+    .encabezado {
+  	height: 2.3cm;
+	display: flex;
+  	flex-direction: column;
+  	justify-content: flex-end;
+      	margin-bottom: 0.5em;
+    }
+
+    .fila-encabezado {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.3em;
+    }
+
+    .nombre-comun {
+      font-size: 20pt;
+      text-align: left;
+      flex: 0.5;
+    }
+
+    .nombre-cientifico {
+      font-size: 20pt;
+      text-align: right;
+      flex: 1;
+    }
+
+    .nombre-cientifico i {
+      font-weight: bold;
+      font-style: italic;
+    }
+
+    .autor {
+      font-size: 12pt;
+      font-style: normal;
+      font-weight: normal;
+    }
+
+    .linea-horizontal {
+      border-top: 2px solid #000;
+      margin: 0.3em 0 1em 0;
+    }
+
+    .datos-superiores {
+      height: 6.2cm;
+      display: flex;
+      justify-content: space-between;
+      gap: 1cm;
+      max-width: 20cm;
+      margin: 0 auto 1em auto;
+    }
+
+    .columna {
+      width: 48%;
+    }
+
+    .bloque-datos {
+      font-size: 12pt;
+      margin-bottom: 0.5em;
+    }
+
+    .etiqueta {
+      font-weight: bold;
+    }
+
+    .notas {
+      font-size: 11pt;
+      margin-top: 0.5em;
+      max-width: 20cm;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .imagenes {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5cm;
+      margin-top: 1em;
+      justify-items: center;
+    }
+
+    .imagen {
+      width: 9cm;
+      height: 6cm;
+      border: 1px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10pt;
+      text-align: center;
+    }
+
+    .pie {
+      font-size: 9pt;
+      text-align: center;
+      margin-top: 0.2em;
+    }
+
+    .referencias {
+      font-size: 10pt;
+      margin-top: 1em;
+      border-top: 1px solid #000;
+      padding-top: 0.5em;
+    }
